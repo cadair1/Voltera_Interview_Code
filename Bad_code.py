@@ -2,6 +2,9 @@
 # Not only are there lots of bugs, but lots of bad design decisions too.
 # Keep an eye out for both.
 
+#Lacks comments, makes code difficult to follow or to understand purpose
+#I have not modified the code, simply made comments where I feel there are issues
+
 from serial import Serial
 from threading import Thread, Lock
 import time
@@ -12,7 +15,7 @@ from datetime import datetime
 
 
 class CentrifugeController:
-    at_speed = False
+    at_speed = False #perhaps these values should all be self.blah? and in __init__?
     target_speed = None
     _speeds = []
     _speed_cap = 10000
@@ -31,15 +34,15 @@ class CentrifugeController:
         buffer = ""
         while True:
             res = self.port.read()
-            buffer += res
-            if not res:
+            buffer += res #Buffer is string, implies res is string
+            if not res: #Implies res is boolean, res cant be boolean and string,  
                 break
         if res != "Serial Centrifuge 8.1":
             raise ValueError("You connected to something that wasn't a centrifuge")
 
     def disconnect(self):
         self.port.close()
-        if self.reconnect:
+        if self.reconnect: #should be reconnect
             self.connect()
             # reset our speed to what it was before
             self.speed(self._speed_cap)
@@ -51,7 +54,7 @@ class CentrifugeController:
 
     def get_speed_in_thread(self):
         # Make sure nobody is using the port
-        self.port_lock.acquire()
+        self.port_lock.acquire() 
         # Ask the device its current speed
         self.port.write("Speed?\n")
         # Wait for response
@@ -59,7 +62,7 @@ class CentrifugeController:
         if result == b"VIBRTION": #Should be Vibration
             # Too mcuh vibration - shut everything down ASAP before damage occurs
             if self._vibration_callback:
-                self._vibration_callback()
+                self._vibration_callback() #vibration_callback() is not defined
             self.speed(0)
             self.disconnect()
             raise RuntimeError("Excessive vibration - cycle halted")
@@ -75,7 +78,7 @@ class CentrifugeController:
 
     def perform_centrifuge_cycle(self, name, cycle):
         # Dont start if door is open
-        if self.is_door_closed() == "no":
+        if self.is_door_closed() == "no": #self.is_door_closed() isnt defined
             return "door not closed"
         self._cycle_running = True
         for step in cycle.split("\n"):
